@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Split Bill Sakti (No Backend)</title>
+    <title>Split Bill</title>
     <!-- Menggunakan Tailwind CSS via CDN untuk tampilan modern -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
@@ -14,9 +14,9 @@
         
         <!-- STEP 1: Konfigurasi API Key -->
         <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-            <h2 class="font-semibold text-yellow-800 mb-2">🔑 Pengaturan API (Disimpan di Browser)</h2>
+            <h2 class="font-semibold text-yellow-800 mb-2">🔑 Pengaturan API</h2>
             <p class="text-xs text-yellow-700 mb-2">Dapatkan API Key gratis di <a href="https://ocr.space/ocrapi" target="_blank" class="underline font-bold">ocr.space</a></p>
-            <input type="text" id="apiKeyInput" placeholder="Masukkan OCR.space API Key Anda" class="w-full p-2 border border-yellow-300 rounded-lg text-sm">
+            <input type="text" id="apiKeyInput" placeholder="Masukkan OCR.space API Key Anda atau pakai API Key K86536191688957" class="w-full p-2 border border-yellow-300 rounded-lg text-sm">
             <button onclick="saveApiKey()" class="mt-2 w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold py-2 rounded-lg transition">Simpan API Key</button>
         </div>
 
@@ -26,7 +26,7 @@
         <div class="mb-6">
             <h2 class="font-semibold text-gray-700 mb-2">📸 1. Scan Struk Belanja</h2>
             <input type="file" id="imageInput" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-            <button onclick="prosesOCR()" id="btnScan" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl transition">Scan Menggunakan API</button>
+            <button onclick="prosesOCR()" id="btnScan" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl transition">Scan</button>
             <div id="loadingStatus" class="text-sm text-gray-500 italic mt-2 hidden">Sedang membaca struk, mohon tunggu...</div>
         </div>
 
@@ -65,7 +65,7 @@
 
         <!-- HASIL -->
         <div id="hasilSection" class="mt-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 hidden">
-            <h2 class="text-xl font-bold text-indigo-900 mb-4 text-center">📊 Hasil Pembagian Adil</h2>
+            <h2 class="text-xl font-bold text-indigo-900 mb-4 text-center">📊 Hasil Pembagian</h2>
             <div id="detailHasil" class="space-y-3">
                 <!-- Rincian bayar per orang -->
             </div>
