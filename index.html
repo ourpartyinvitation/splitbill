@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Bill Sakti (No Backend)</title>
+    <!-- Menggunakan Tailwind CSS via CDN untuk tampilan modern -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 font-sans p-4 md:p-8">
+
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl">
+        <h1 class="text-2xl font-bold text-center text-indigo-600 mb-6">💸 Split Bill Mandiri</h1>
+        
+        <!-- STEP 1: Konfigurasi API Key -->
+        <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <h2 class="font-semibold text-yellow-800 mb-2">🔑 Pengaturan API (Disimpan di Browser)</h2>
+            <p class="text-xs text-yellow-700 mb-2">Dapatkan API Key gratis di <a href="https://ocr.space/ocrapi" target="_blank" class="underline font-bold">ocr.space</a></p>
+            <input type="text" id="apiKeyInput" placeholder="Masukkan OCR.space API Key Anda" class="w-full p-2 border border-yellow-300 rounded-lg text-sm">
+            <button onclick="saveApiKey()" class="mt-2 w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold py-2 rounded-lg transition">Simpan API Key</button>
+        </div>
+
+        <hr class="border-gray-200 my-6">
+
+        <!-- STEP 2: Upload Struk -->
+        <div class="mb-6">
+            <h2 class="font-semibold text-gray-700 mb-2">📸 1. Scan Struk Belanja</h2>
+            <input type="file" id="imageInput" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            <button onclick="prosesOCR()" id="btnScan" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl transition">Scan Menggunakan API</button>
+            <div id="loadingStatus" class="text-sm text-gray-500 italic mt-2 hidden">Sedang membaca struk, mohon tunggu...</div>
+        </div>
+
+        <!-- STEP 3: Form Menu & Harga -->
+        <div class="mb-6">
+            <h2 class="font-semibold text-gray-700 mb-2">📋 2. Item yang Terdeteksi / Input Manual</h2>
+            <div id="itemContainer" class="space-y-2">
+                <!-- Baris item akan muncul di sini secara dinamis -->
+            </div>
+            <button onclick="tambahBarisManual()" class="mt-3 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">+ Tambah Item Manual</button>
+        </div>
+
+        <!-- STEP 4: Pajak & Service Charge -->
+        <div class="mb-6 grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
+            <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase">Pajak / Tax (%)</label>
+                <input type="number" id="inputTax" value="10" class="w-full mt-1 p-2 border rounded-lg" oninput="hitungTotal()">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase">Service Charge (%)</label>
+                <input type="number" id="inputService" value="5" class="w-full mt-1 p-2 border rounded-lg" oninput="hitungTotal()">
+            </div>
+        </div>
+
+        <!-- STEP 5: Anggota Kelompok -->
+        <div class="mb-6">
+            <h2 class="font-semibold text-gray-700 mb-2">👥 3. Siapa Saja yang Ikut Makan?</h2>
+            <input type="text" id="inputNama" placeholder="Ketik nama lalu tekan Enter atau koma" class="w-full p-2 border rounded-lg" onkeyup="handleInputNama(event)">
+            <div id="daftarNama" class="flex flex-wrap gap-2 mt-2">
+                <!-- Badges nama orang -->
+            </div>
+        </div>
+
+        <!-- STEP 6: Kalkulasi Akhir -->
+        <button onclick="kalkulasiSplitBill()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition text-lg">💰 Hitung Pembagian</button>
+
+        <!-- HASIL -->
+        <div id="hasilSection" class="mt-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 hidden">
+            <h2 class="text-xl font-bold text-indigo-900 mb-4 text-center">📊 Hasil Pembagian Adil</h2>
+            <div id="detailHasil" class="space-y-3">
+                <!-- Rincian bayar per orang -->
+            </div>
+            <button onclick="bagikanKeWA()" class="mt-6 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-xl transition flex justify-center items-center gap-2">
+                💬 Bagikan Hasil ke WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // State Global Aplikasi
+        let daftarItem = [];
+        let daftarOrang = [];
+
+        // Load API Key dari localStorage saat halaman dibuka
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedKey = localStorage.getItem("ocr_api_key");
+            if (savedKey) document.getElementById("apiKeyInput").value = savedKey;
+            tambahBarisManual(); // Berikan 1 baris kosong di awal
+        });
+
+        function saveApiKey() {
+            const key = document.getElementById("apiKeyInput").value.trim();
+            localStorage.setItem("ocr_api_key", key);
+            alert("API Key berhasil disimpan di browser Anda!");
+        }
+
+        // Fungsi Menambahkan Baris Form Input Menu
+        function tambahBarisManual(nama = '', harga = 0) {
+            const container = document.getElementById("itemContainer");
+            const id = Date.now() + Math.random();
+            
+            const div = document.createElement("div");
+            div.className = "flex gap-2 items-center bg-gray-50 p-2 rounded-lg id-baris";
+            div.id = `item-${id}`;
+            div.innerHTML = `
+                <input type="text" placeholder="Nama Menu" value="${nama}" class="w-1/2 p-2 border rounded-lg text-sm input-nama-menu">
+                <input type="number" placeholder="Harga" value="${harga}" class="w-1/4 p-2 border rounded-lg text-sm input-harga-menu" oninput="hitungTotal()">
+                <select class="w-1/4 p-2 border rounded-lg text-sm select-pemakan" multiple>
+                    <!-- Opsi nama orang akan diisi dinamis -->
+                </select>
+                <button onclick="hapusBaris('item-${id}')" class="text-red-500 px-2 font-bold">X</button>
+            `;
+            container.appendChild(div);
+            updateDropdownOrang();
+        }
+
+        function hapusBaris(id) {
+            document.getElementById(id).remove();
+            hitungTotal();
+        }
+
+        // Manajemen Daftar Nama Orang
+        function handleInputNama(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                let nama = e.target.value.replace(',', '').trim();
+                if (nama && !daftarOrang.includes(nama)) {
+                    daftarOrang.push(nama);
+                    renderBadgesNama();
+                    updateDropdownOrang();
+                }
+                e.target.value = '';
+            }
+        }
+
+        function hapusNama(index) {
+            daftarOrang.splice(index, 1);
+            renderBadgesNama();
+            updateDropdownOrang();
+        }
+
+        function renderBadgesNama() {
+            const container = document.getElementById("daftarNama");
+            container.innerHTML = daftarOrang.map((nama, i) => `
+                <span class="bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full flex items-center gap-2">
+                    ${nama}
+                    <button onclick="hapusNama(${i})" class="text-xs text-red-500 font-bold hover:text-red-700">x</button>
+                </span>
+            `).join('');
+        }
+
+        function updateDropdownOrang() {
+            const dropdowns = document.querySelectorAll(".select-pemakan");
+            dropdowns.forEach(select => {
+                const nilaiTerpilih = Array.from(select.selectedOptions).map(opt => opt.value);
+                select.innerHTML = daftarOrang.map(nama => `
+                    <option value="${nama}" ${nilaiTerpilih.includes(nama) ? 'selected' : ''}>${nama}</option>
+                `).join('');
+            });
+        }
+
+        // FUNGSI UTAMA: Tembak API OCR.space
+        async function prosesOCR() {
+            const apiKey = localStorage.getItem("ocr_api_key");
+            const fileInput = document.getElementById("imageInput");
+            
+            if (!apiKey) return alert("Mohon isi dan simpan API Key terlebih dahulu!");
+            if (fileInput.files.length === 0) return alert("Pilih foto struk terlebih dahulu!");
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append("apikey", apiKey);
+            formData.append("file", file);
+            formData.append("language", "eng"); // Gunakan "eng" karena angka struk lebih stabil terbaca
+
+            document.getElementById("loadingStatus").classList.remove("hidden");
+            document.getElementById("btnScan").disabled = true;
+
+            try {
+                const response = await fetch("https://api.ocr.space/parse/image", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (result.IsErroredOnProcessing) {
+                    alert("Gagal memproses gambar: " + result.ErrorMessage);
+                } else {
+                    const parsedText = result.ParsedResults[0].ParsedText;
+                    ekstrakTeksKeForm(parsedText);
+                }
+            } catch (err) {
+                alert("Terjadi kesalahan koneksi ke API.");
+                console.error(err);
+            } finally {
+                document.getElementById("loadingStatus").classList.add("hidden");
+                document.getElementById("btnScan").disabled = false;
+            }
+        }
+
+        // Algoritma Pintar Memisahkan Baris Menu dan Harga
+        function ekstrakTeksKeForm(teks) {
+            // Bersihkan form yang ada dulu
+            document.getElementById("itemContainer").innerHTML = '';
+            
+            const baris Teks = teks.split('\n');
+            
+            barisTeks.forEach(baris => {
+                // Cari angka di dalam baris (biasanya harga di ujung kanan)
+                // Menghilangkan titik/koma ribuan agar mudah dibaca sebagai angka utuh
+                const angkaMatch = baris.match(/\b\d+[\.,]?\d*\b/g);
+                
+                if (angkaMatch) {
+                    // Ambil angka terakhir yang kemungkinan besar adalah harga item
+                    let hargaMentah = angkaMatch[angkaMatch.length - 1];
+                    let harga = parseInt(hargaMentah.replace(/[\.,]/g, ''));
+                    
+                    // Ambil teks sebelum harga tersebut sebagai nama menu
+                    let namaMenu = baris.replace(hargaMentah, '').replace(/[\d\.\,]/g, '').trim();
+                    
+                    // Validasi: Hanya masukkan jika nama menu ada dan harga masuk akal (misal > 1000 perak)
+                    if (namaMenu.length > 2 && harga > 1000) {
+                        tambahBarisManual(namaMenu, harga);
+                    }
+                }
+            });
+
+            if(document.getElementById("itemContainer").children.length === 0) {
+                alert("Struk terbaca, namun sistem tidak mendeteksi pola menu & harga secara otomatis. Silakan tambah manual.");
+                tambahBarisManual();
+            }
+        }
+
+        function hitungTotal() {
+            // Fungsi ini opsional jika Anda ingin menampilkan Live Subtotal (bisa dikembangkan)
+        }
+
+        // FUNGSI ARITMATIKA: Menghitung pembagian adil secara proporsional
+        let ringkasanTeksWA = ""; // Menyimpan teks untuk dibagikan
+
+        function kalkulasiSplitBill() {
+            if (daftarOrang.length === 0) return alert("Masukkan minimal 1 orang yang ikut makan!");
+
+            const barisItems = document.querySelectorAll(".id-baris");
+            const taxPersen = parseFloat(document.getElementById("inputTax").value) || 0;
+            const servicePersen = parseFloat(document.getElementById("inputService").value) || 0;
+
+            let totalPerOrang = {};
+            daftarOrang.forEach(nama => totalPerOrang[nama] = 0);
+
+            let adaItemTanpaPemakan = false;
+
+            barisItems.forEach(baris => {
+                const namaMenu = baris.querySelector(".input-nama-menu").value;
+                const harga = parseFloat(baris.querySelector(".input-harga-menu").value) || 0;
+                const pemakan = Array.from(baris.querySelector(".select-pemakan").selectedOptions).map(opt => opt.value);
+
+                if (harga > 0) {
+                    if (pemakan.length === 0) {
+                        adaItemTanpaPemakan = true;
+                        return;
+                    }
+                    // Harga item dibagi rata ke orang-orang yang memakannya
+                    const hargaPerOrang = harga / pemakan.length;
+                    pemakan.forEach(nama => {
+                        totalPerOrang[nama] += hargaPerOrang;
+                    });
+                }
+            });
+
+            if (adaItemTanpaPemakan) {
+                alert("Peringatan: Ada item berharga yang belum dipilih siapa pemakannya!");
+                return;
+            }
+
+            // Hitung Pengali Pajak & Service (Contoh: 10% + 5% = 15% tambahan biaya)
+            const faktorPengali = 1 + ((taxPersen + servicePersen) / 100);
+
+            // Render Hasil
+            const hasilSection = document.getElementById("hasilSection");
+            const detailHasil = document.getElementById("detailHasil");
+            detailHasil.innerHTML = "";
+            hasilSection.classList.remove("hidden");
+
+            ringkasanTeksWA = "*Hasil Split Bill Adil* 💸\n\n";
+
+            for (let orang in totalPerOrang) {
+                let subtotalOrang = totalPerOrang[orang];
+                let totalAkhirOrang = Math.round(subtotalOrang * faktorPengali);
+                
+                detailHasil.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-xs">
+                        <span class="font-bold text-gray-700">${orang}</span>
+                        <span class="text-indigo-600 font-mono font-bold">Rp ${totalAkhirOrang.toLocaleString('id-ID')}</span>
+                    </div>
+                `;
+
+                ringkasanTeksWA += `• *${orang}*: Rp ${totalAkhirOrang.toLocaleString('id-ID')}\n`;
+            }
+            
+            ringkasanTeksWA += `\n_(Sudah termasuk Tax ${taxPersen}% & Service ${servicePersen}%)_`;
+        }
+
+        function bagikanKeWA() {
+            if (!ringkasanTeksWA) return;
+            const urlWA = `https://api.whatsapp.com/send?text=${encodeURIComponent(ringkasanTeksWA)}`;
+            window.open(urlWA, '_blank');
+        }
+    </script>
+</body>
+</html>
