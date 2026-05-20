@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Split Bill Mandiri (Mobile Optimized)</title>
+    <title>Split Bill Mandiri</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 font-sans p-4 md:p-8">
@@ -14,12 +14,12 @@
         <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
             <h2 class="font-semibold text-yellow-800 mb-1">🔑 Pengaturan API</h2>
             <p class="text-[11px] text-yellow-700 mb-2">Pakai API K86536191688957 atau dapatkan API Key Anda sendiri di <a href="https://ocr.space/ocrapi/freekey" target="_blank" class="underline font-bold">ocr.space</a></p>
-            <input type="text" id="apiKeyInput" placeholder="Masukkan OCR.space API Key Anda" class="w-full p-2 border border-yellow-300 rounded-lg text-sm">
+            <input type="text" id="apiKeyInput" value="K86536191688957" placeholder="Masukkan OCR.space API Key Anda" class="w-full p-2 border border-yellow-300 rounded-lg text-sm">
             <button onclick="saveApiKey()" class="mt-2 w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold py-2 rounded-lg transition">Simpan API Key</button>
         </div>
 
         <div class="mb-6 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
-            <h2 class="font-semibold text-gray-700 mb-1">👥 1. Siapa Saja yang Ikut Makan?</h2>
+            <h2 class="font-semibold text-gray-700 mb-1">👥 Siapa Saja yang Ikut Makan?</h2>
             <p class="text-xs text-gray-500 mb-2">Tulis semua nama orang terlebih dahulu sebelum mengisi atau men-scan menu.</p>
             <input type="text" id="inputNama" placeholder="Ketik nama lalu tekan Enter atau koma" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white" onkeyup="handleInputNama(event)">
             <p class="text-[10px] text-gray-400 mt-1">*Di HP, ketik satu nama lalu tekan enter/koma pada keyboard ponsel.</p>
@@ -28,14 +28,14 @@
         </div>
 
         <div class="mb-6">
-            <h2 class="font-semibold text-gray-700 mb-2">📸 2. Scan Struk Belanja</h2>
+            <h2 class="font-semibold text-gray-700 mb-2">📸 Scan Struk Belanja</h2>
             <input type="file" id="imageInput" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
             <button onclick="prosesOCR()" id="btnScan" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl transition">Scan Struk</button>
             <div id="loadingStatus" class="text-sm text-gray-500 italic mt-2 hidden animate-pulse">Sedang membaca struk, mohon tunggu sekitar 3-5 detik...</div>
         </div>
 
         <div class="mb-6">
-            <h2 class="font-semibold text-gray-700 mb-2">📋 3. Item Menu & Pemakan</h2>
+            <h2 class="font-semibold text-gray-700 mb-2">📋 Item Menu & Pemakan</h2>
             <div id="itemContainer" class="space-y-4">
                 </div>
             <button onclick="tambahBarisManual('', 0)" class="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">+ Tambah Item Manual</button>
@@ -48,7 +48,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase">Service Charge (%)</label>
-                <input type="number" id="inputService" value="5" class="w-full mt-1 p-2 border rounded-lg bg-white">
+                <input type="number" id="inputService" value="0" class="w-full mt-1 p-2 border rounded-lg bg-white">
             </div>
         </div>
 
@@ -65,11 +65,9 @@
     </div>
 
     <script>
-        // State Global Aplikasi
         let daftarOrang = [];
         let ringkasanTeksWA = ""; 
 
-        // Load API Key saat halaman dibuka
         document.addEventListener("DOMContentLoaded", () => {
             const savedKey = localStorage.getItem("ocr_api_key");
             if (savedKey) {
@@ -77,7 +75,7 @@
             } else {
                 localStorage.setItem("ocr_api_key", "K86536191688957");
             }
-            tambahBarisManual('', 0); // Berikan 1 baris kosong di awal
+            tambahBarisManual('', 0); 
         });
 
         function saveApiKey() {
@@ -86,7 +84,6 @@
             alert("API Key berhasil disimpan di browser Anda!");
         }
 
-        // Fungsi Menambahkan Baris Form Input Menu (Versi Mobile Friendly)
         function tambahBarisManual(nama = '', harga = 0) {
             const container = document.getElementById("itemContainer");
             const id = "item-" + Date.now() + Math.floor(Math.random() * 1000);
@@ -95,12 +92,11 @@
             div.className = "p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2 id-baris relative";
             div.id = id;
             
-            // Generate HTML Baris Input Menu & Pilihan Checkbox Orang di bawahnya
             div.innerHTML = `
                 <button onclick="hapusBaris('${id}')" class="absolute top-2 right-3 text-red-500 font-bold hover:text-red-700 text-sm">Hapus</button>
                 <div class="flex gap-2 pr-12">
                     <input type="text" placeholder="Nama Menu" value="${nama}" class="w-2/3 p-2 border rounded-lg text-sm input-nama-menu bg-white">
-                    <input type="number" placeholder="Harga" value="${harga}" class="w-1/3 p-2 border rounded-lg text-sm input-harga-menu bg-white">
+                    <input type="number" placeholder="Harga Total" value="${harga}" class="w-1/3 p-2 border rounded-lg text-sm input-harga-menu bg-white">
                 </div>
                 <div class="pt-1">
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Siapa yang makan ini?</label>
@@ -112,7 +108,6 @@
             container.appendChild(div);
         }
 
-        // Fungsi pembantu membuat daftar checkbox pemakan di tiap baris menu
         function generateCheckboxOrang(rowId, selectedNames = []) {
             if (daftarOrang.length === 0) {
                 return `<span class="text-xs text-gray-400 italic">Belum ada daftar nama. Isi langkah 1 di atas.</span>`;
@@ -137,7 +132,6 @@
             }
         }
 
-        // Manajemen Daftar Nama Orang
         function handleInputNama(e) {
             if (e.key === 'Enter' || e.key === ',') {
                 let nama = e.target.value.replace(',', '').trim();
@@ -166,19 +160,15 @@
             `).join('');
         }
 
-        // Sinkronisasi checkbox pemakan saat ada penambahan/pengurangan nama orang di atas tanpa merusak data terpilih
         function syncSemuaDropdownCheckbox() {
             const barisElements = document.querySelectorAll(".id-baris");
             barisElements.forEach(baris => {
                 const containerCheckbox = baris.querySelector(".container-checkbox-pemakan");
-                // Ambil nama-nama yang saat ini sedang dicentang
                 const checkedBoxes = Array.from(baris.querySelectorAll(".checkbox-pemakan:checked")).map(cb => cb.value);
-                // Render ulang checkbox list dengan struktur data anggota terbaru
                 containerCheckbox.innerHTML = generateCheckboxOrang(baris.id, checkedBoxes);
             });
         }
 
-        // FUNGSI API OCR.space
         async function prosesOCR() {
             const apiKey = document.getElementById("apiKeyInput").value.trim();
             const fileInput = document.getElementById("imageInput");
@@ -219,7 +209,7 @@
             }
         }
 
-        // Algoritma Ekstraksi Teks V3 (Multi-Baris)
+        // Algoritma Ekstraksi Teks V4 - Fokus Mengambil Total Harga Terbesar di Baris Tersebut
         function ekstrakTeksKeForm(teks) {
             document.getElementById("itemContainer").innerHTML = '';
             
@@ -246,22 +236,29 @@
                 
                 if (harusDiabaikan) return;
 
+                // Ambil semua deretan angka di baris ini
                 const angkaMatch = baris.match(/\b\d+[\.,]?\d*[\.,]?\d*\b/g);
-                let harga = 0;
-                let hargaMentah = "";
+                let hargaMax = 0;
+                let teksHargaMax = "";
 
                 if (angkaMatch && angkaMatch.length > 0) {
-                    let angkaTerakhir = angkaMatch[angkaMatch.length - 1];
-                    let angkaParsed = parseInt(angkaTerakhir.replace(/[\.,]/g, ''));
-                    
-                    if (!isNaN(angkaParsed) && angkaParsed >= 1000) {
-                        harga = angkaParsed;
-                        hargaMentah = angkaTerakhir;
-                    }
+                    // Cari nilai angka TERBESAR di baris tersebut (untuk menghindari terjebak harga satuan/kuantitas)
+                    angkaMatch.forEach(itemAngka => {
+                        let angkaParsed = parseInt(itemAngka.replace(/[\.,]/g, ''));
+                        if (!isNaN(angkaParsed) && angkaParsed >= 1000) {
+                            if (angkaParsed > hargaMax) {
+                                hargaMax = angkaParsed;
+                                teksHargaMax = itemAngka; // simpan string aslinya untuk dihapus dari nama menu
+                            }
+                        }
+                    });
                 }
 
-                if (harga > 0) {
-                    let namaMenuSekarang = baris.replace(hargaMentah, '');
+                if (hargaMax > 0) {
+                    // Bersihkan string nama menu dari angka harga maksimal yang kita ambil
+                    let namaMenuSekarang = baris.replace(teksHargaMax, '');
+                    
+                    // Bersihkan sisa-sisa teks kuantitas/harga satuan (misal: "5x @24.000")
                     namaMenuSekarang = namaMenuSekarang.replace(/@\s*\d+[\.,]?\d*/g, '');
                     namaMenuSekarang = namaMenuSekarang.replace(/rp\s*/gi, '');
                     namaMenuSekarang = namaMenuSekarang.replace(/^\d+\s*[xX]?\s*/, '');
@@ -272,7 +269,7 @@
 
                     if (namaMenuFinal.length >= 3 && !barisLower.includes('notes')) {
                         namaMenuFinal = namaMenuFinal.replace(/\b\w/g, l => l.toUpperCase());
-                        tambahBarisManual(namaMenuFinal, harga);
+                        tambahBarisManual(namaMenuFinal, hargaMax);
                     }
                     namaMenuTersimpan = ""; 
                 } else {
@@ -286,12 +283,11 @@
             });
 
             if (document.getElementById("itemContainer").children.length === 0) {
-                alert("Struk berhasil terbaca, namun sistem tidak mendeteksi pola menu otomatis. Silakan isi form manual.");
+                alert("Struk berhasil terbaca, namun tidak mendeteksi menu otomatis. Silakan isi manual.");
                 tambahBarisManual('', 0);
             }
         }
 
-        // FUNGSI UTAMA HITUNG & SHARE (DIREVISI TOTAL MENJADI SUPER DETAIL)
         function kalkulasiSplitBill() {
             if (daftarOrang.length === 0) return alert("Masukkan minimal 1 orang yang ikut makan di Langkah 1!");
 
@@ -299,8 +295,6 @@
             const taxPersen = parseFloat(document.getElementById("inputTax").value) || 0;
             const servicePersen = parseFloat(document.getElementById("inputService").value) || 0;
 
-            // Objek untuk menampung rincian per orang
-            // Format: { "Andi": { totalSub: 0, totalAkhir: 0, rincianMenu: [ {nama, hargaAsli, jumlahPemakan, porsiHarga}, ... ] } }
             let dataHasilOrang = {};
             daftarOrang.forEach(nama => {
                 dataHasilOrang[nama] = {
@@ -315,7 +309,6 @@
             barisElements.forEach(baris => {
                 const namaMenu = baris.querySelector(".input-nama-menu").value.trim();
                 const harga = parseFloat(baris.querySelector(".input-harga-menu").value) || 0;
-                // Mengambil nilai pemakan dari checkbox yang dicentang
                 const pemakan = Array.from(baris.querySelectorAll(".checkbox-pemakan:checked")).map(cb => cb.value);
 
                 if (harga > 0 && namaMenu !== "") {
@@ -330,9 +323,9 @@
                         dataHasilOrang[nama].totalSub += hargaPerOrang;
                         dataHasilOrang[nama].rincianMenu.push({
                             namaMenu: namaMenu,
-                            hargaAsli: harga,
+                            hargaTotalMenu: harga,
                             jumlahPemakan: pemakan.length,
-                            porsiHarga: hargaPerOrang
+                            porsiHargaAsli: hargaPerOrang
                         });
                     });
                 }
@@ -345,26 +338,27 @@
 
             const faktorPengali = 1 + ((taxPersen + servicePersen) / 100);
 
-            // Render ke UI
             const hasilSection = document.getElementById("hasilSection");
             const detailHasil = document.getElementById("detailHasil");
             detailHasil.innerHTML = "";
             hasilSection.classList.remove("hidden");
 
-            // Siapkan Struktur Teks WhatsApp
             ringkasanTeksWA = "*💸 HASIL SPLIT BILL ADIL DETIL 💸*\n\n";
 
             for (let orang in dataHasilOrang) {
                 let data = dataHasilOrang[orang];
                 data.totalAkhir = Math.round(data.totalSub * faktorPengali);
 
-                // Buat Tampilan HTML per orang
-                let htmlRincianMenu = data.rincianMenu.map(m => `
-                    <div class="text-xs text-gray-500 flex justify-between pl-2 border-l border-indigo-200">
-                        <span>• ${m.namaMenu} <span class="text-[10px]">(Rp ${m.hargaAsli.toLocaleString('id-ID')} / ${m.jumlahPemakan} org)</span></span>
-                        <span class="font-mono">Rp ${Math.round(m.porsiHarga).toLocaleString('id-ID')}</span>
-                    </div>
-                `).join('');
+                // Buat Tampilan HTML per orang dengan Harga Setelah Pajak/Adil proporsional
+                let htmlRincianMenu = data.rincianMenu.map(m => {
+                    let porsiSetelahPajak = Math.round(m.porsiHargaAsli * faktorPengali);
+                    return `
+                        <div class="text-xs text-gray-500 flex justify-between pl-2 border-l border-indigo-200">
+                            <span>• ${m.namaMenu} <span class="text-[10px]">(Total: Rp ${m.hargaTotalMenu.toLocaleString('id-ID')} / ${m.jumlahPemakan} org)</span></span>
+                            <span class="font-mono font-semibold text-gray-700">Rp ${porsiSetelahPajak.toLocaleString('id-ID')}</span>
+                        </div>
+                    `;
+                }).join('');
 
                 detailHasil.innerHTML += `
                     <div class="bg-white p-4 rounded-xl shadow-xs border border-indigo-100/50 space-y-2">
@@ -376,26 +370,25 @@
                             ${htmlRincianMenu || '<div class="text-xs text-gray-400 italic pl-2">Tidak memesan menu apapun</div>'}
                         </div>
                         <div class="text-[10px] text-gray-400 text-right pt-1">
-                            Subtotal: Rp ${Math.round(data.totalSub).toLocaleString('id-ID')} + Pajak & Service
+                            Nett ( include Tax ${taxPersen}% & Service ${servicePersen}% )
                         </div>
                     </div>
                 `;
 
-                // Teks Rincian untuk WhatsApp
+                // Teks Rincian untuk WhatsApp menggunakan Harga Akhir Bersih Berbagi Adil
                 ringkasanTeksWA += `*👤 ${orang.toUpperCase()}* ➡️ *Rp ${data.totalAkhir.toLocaleString('id-ID')}*\n`;
                 if (data.rincianMenu.length > 0) {
                     data.rincianMenu.forEach(m => {
-                        ringkasanTeksWA += `  - ${m.namaMenu} (Rp ${Math.round(m.porsiHarga).toLocaleString('id-ID')})\n`;
+                        let porsiSetelahPajak = Math.round(m.porsiHargaAsli * faktorPengali);
+                        ringkasanTeksWA += `  - ${m.namaMenu} (Rp ${porsiSetelahPajak.toLocaleString('id-ID')})\n`;
                     });
                 } else {
                     ringkasanTeksWA += `  - Tidak ada pesanan\n`;
                 }
-                ringkasanTeksWA += `  _(Subtotal: Rp ${Math.round(data.totalSub).toLocaleString('id-ID')})_\n\n`;
+                ringkasanTeksWA += `\n`;
             }
             
-            ringkasanTeksWA += `*Catatan Tambahan Biaya:* \n• Tax / PB1: ${taxPersen}%\n• Service Charge: ${servicePersen}%\n\n_Dihitung otomatis & adil secara proporsional._`;
-            
-            // Otomatis scroll ke bagian hasil setelah klik tombol hitung
+            ringkasanTeksWA += `*Catatan Tambahan Biaya:* \n• Tax / PB1: ${taxPersen}%\n• Service Charge: ${servicePersen}%\n\n_Dihitung otomatis & bersih termasuk pajak per menu._`;
             hasilSection.scrollIntoView({ behavior: 'smooth' });
         }
 
